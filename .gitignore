@@ -1,2 +1,4 @@
 */tide_api_key*
 tide_api_key
+__pycache__/
+.pyc

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, render_template
 from datetime import datetime, timedelta
 import jwt
 import traceback
@@ -129,6 +129,10 @@ def all_data():
     records = EnvironmentData.query.all()
     data = [record.to_dict() for record in records]
     return jsonify(data)
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template("dashboard.html")
 
 if __name__ == '__main__':
     app.run(debug=False, port=5001)

@@ -1,0 +1,5 @@
+redis-cli -p 6379 ping
+# checks that redis is running on correct port
+
+celery -A app:celery worker --loglevel=info --pool=solo
+# starts celery

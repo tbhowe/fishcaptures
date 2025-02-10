@@ -1,20 +1,26 @@
 import requests
+import uuid
 
 BASE_URL = "http://127.0.0.1:5001"
-USERNAME = "alice"
 PASSWORD = "password123"
-EMAIL = "alice@example.com"
 
-def register_user():
+def generate_unique_user():
+    # Generate a short unique string
+    unique_str = str(uuid.uuid4())[:8]
+    username = f"alice_{unique_str}"
+    email = f"{username}@example.com"
+    return username, email
+
+def register_user(username, email):
     url = f"{BASE_URL}/register"
-    payload = {"username": USERNAME, "password": PASSWORD, "email": EMAIL}
+    payload = {"username": username, "password": PASSWORD, "email": email}
     response = requests.post(url, json=payload)
     print("Register response:", response.json())
     return response
 
-def login_user():
+def login_user(username):
     url = f"{BASE_URL}/login"
-    payload = {"username": USERNAME, "password": PASSWORD}
+    payload = {"username": username, "password": PASSWORD}
     response = requests.post(url, json=payload)
     data = response.json()
     print("Login response:", data)
@@ -33,10 +39,10 @@ def submit_timestamp(token):
     print("Submit Timestamp response:", response.json())
 
 def main():
-    # Optionally register a user (if already registered this may fail; ignore error)
-    register_user()
+    username, email = generate_unique_user()
+    register_user(username, email)
     
-    token = login_user()
+    token = login_user(username)
     if token:
         submit_timestamp(token)
     else:

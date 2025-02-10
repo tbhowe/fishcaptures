@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, render_template
 from datetime import datetime, timedelta
 import jwt
 import traceback
@@ -41,15 +41,18 @@ def register():
     data = request.get_json()
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({'message': 'Username and password required'}), 400
-    
+
     username = data.get('username')
     password = data.get('password')
     email = data.get('email')
+    # Read the optional is_admin flag; default to False if not provided.
+    is_admin = data.get('is_admin', False)
     
     if User.query.filter_by(username=username).first():
         return jsonify({'message': 'User already exists'}), 400
     
-    user = User(username=username, email=email)
+    # Create user with is_admin set according to the payload.
+    user = User(username=username, email=email, is_admin=is_admin)
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
@@ -129,6 +132,10 @@ def all_data():
     records = EnvironmentData.query.all()
     data = [record.to_dict() for record in records]
     return jsonify(data)
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template("dashboard.html")
 
 if __name__ == '__main__':
     app.run(debug=False, port=5001)

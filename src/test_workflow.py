@@ -1,5 +1,6 @@
 import requests
 import uuid
+import argparse
 from datetime import datetime, timezone
 
 BASE_URL = "http://127.0.0.1:5001"
@@ -11,9 +12,11 @@ def generate_unique_user():
     email = f"{username}@example.com"
     return username, email
 
-def register_user(username, email):
+def register_user(username, email, is_admin=False):
     url = f"{BASE_URL}/register"
     payload = {"username": username, "password": PASSWORD, "email": email}
+    if is_admin:
+        payload["is_admin"] = True
     response = requests.post(url, json=payload)
     print("Register response:", response.json())
     return response
@@ -53,17 +56,38 @@ def view_all_data(token):
     print("All Data response:", response.json())
 
 def main():
-    username, email = generate_unique_user()
-    register_user(username, email)
-    
-    token = login_user(username)
-    if token:
-        submit_timestamp(token)
-        view_my_data(token)
-        # Attempt to view all data. For a non-admin user, this should return an error.
-        view_all_data(token)
+    parser = argparse.ArgumentParser(description="Test workflow for user or admin")
+    parser.add_argument("--admin", action="store_true", help="Run admin workflow")
+    args = parser.parse_args()
+
+    if args.admin:
+        # Admin workflow using fixed credentials.
+        admin_username = "admin"
+        admin_email = "admin@example.com"
+        # Try logging in first.
+        token = login_user(admin_username)
+        if not token:
+            print("Admin login failed, attempting to register admin.")
+            register_user(admin_username, admin_email, is_admin=True)
+            token = login_user(admin_username)
+        if token:
+            submit_timestamp(token)
+            view_my_data(token)
+            view_all_data(token)
+        else:
+            print("Failed to retrieve admin token. Aborting.")
     else:
-        print("Failed to retrieve token. Aborting.")
+        # Normal user workflow.
+        username, email = generate_unique_user()
+        register_user(username, email)
+        token = login_user(username)
+        if token:
+            submit_timestamp(token)
+            view_my_data(token)
+            # For a non-admin, this should return an error.
+            view_all_data(token)
+        else:
+            print("Failed to retrieve token. Aborting.")
 
 if __name__ == "__main__":
     main()

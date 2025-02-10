@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+    <style>
+      body { font-family: Arial, sans-serif; }
+      input, button { margin: 5px; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+      @media (max-width: 600px) {
+         table, th, td { font-size: 12px; }
+      }
+    </style>
+</head>
+<body>
+    <h1>User Dashboard</h1>
+    <div id="login">
+        <h2>Login</h2>
+        <label>Username: <input type="text" id="username"></label><br>
+        <label>Password: <input type="password" id="password"></label><br>
+        <button id="loginBtn">Login</button>
+    </div>
+    <div id="dashboard" style="display:none;">
+        <h2>Your Data</h2>
+        <button id="loadDataBtn">Load My Data</button>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <br>
+        <button id="logoutBtn">Logout</button>
+    </div>
+    
+    <script>
+        // If your backend is on the same host and port, BASE_URL can be empty.
+        const BASE_URL = "";
+
+        const loginDiv = document.getElementById("login");
+        const dashboardDiv = document.getElementById("dashboard");
+        const loginBtn = document.getElementById("loginBtn");
+        const loadDataBtn = document.getElementById("loadDataBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        loginBtn.addEventListener("click", async () => {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const response = await fetch(BASE_URL + "/login", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({username, password})
+            });
+            const data = await response.json();
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+                loginDiv.style.display = "none";
+                dashboardDiv.style.display = "block";
+            } else {
+                alert("Login failed: " + data.message);
+            }
+        });
+
+        loadDataBtn.addEventListener("click", async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Not logged in!");
+                return;
+            }
+            const response = await fetch(BASE_URL + "/my_data", {
+                method: "GET",
+                headers: {"Authorization": "Bearer " + token}
+            });
+            const data = await response.json();
+            const tbody = document.querySelector("#dataTable tbody");
+            tbody.innerHTML = "";
+            if (Array.isArray(data)) {
+                data.forEach(record => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${record.id}</td>
+                        <td>${record.timestamp}</td>
+                        <td>${record.latitude}</td>
+                        <td>${record.longitude}</td>
+                        <td>${record.status}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                alert("Error loading data: " + JSON.stringify(data));
+            }
+        });
+
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("token");
+            loginDiv.style.display = "block";
+            dashboardDiv.style.display = "none";
+        });
+
+        // On page load, if a token exists, show dashboard.
+        window.addEventListener("load", () => {
+            const token = localStorage.getItem("token");
+            if (token) {
+                loginDiv.style.display = "none";
+                dashboardDiv.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

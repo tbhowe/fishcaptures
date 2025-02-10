@@ -1,11 +1,11 @@
 import requests
 import uuid
+from datetime import datetime, timezone
 
 BASE_URL = "http://127.0.0.1:5001"
 PASSWORD = "password123"
 
 def generate_unique_user():
-    # Generate a short unique string
     unique_str = str(uuid.uuid4())[:8]
     username = f"alice_{unique_str}"
     email = f"{username}@example.com"
@@ -30,8 +30,10 @@ def login_user(username):
 def submit_timestamp(token):
     url = f"{BASE_URL}/submit_timestamp"
     headers = {"Authorization": f"Bearer {token}"}
+    # Get the current UTC time without microseconds
+    utc_timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     payload = {
-        "timestamp": "2025-02-10T08:00:00",
+        "timestamp": utc_timestamp,
         "lat": 50.220564,
         "lng": -4.801677
     }
@@ -50,3 +52,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

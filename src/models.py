@@ -1,14 +1,13 @@
-import uuid
+# models.py
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import UUID  # If using PostgreSQL
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
 class User(db.Model):
     __tablename__ = 'users'
-    
-    # Use UUID for primary key.
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
@@ -31,8 +30,7 @@ class User(db.Model):
 
 class EnvironmentData(db.Model):
     __tablename__ = 'environment_data'
-    
-    # Change primary key to a UUID.
+    # If you are switching to UUID for EnvironmentData, update the primary key accordingly.
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     timestamp = db.Column(db.DateTime, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
@@ -47,8 +45,9 @@ class EnvironmentData(db.Model):
     cloudcover_low = db.Column(db.Float, nullable=True)
     cloudcover_mid = db.Column(db.Float, nullable=True)
     cloudcover_high = db.Column(db.Float, nullable=True)
+    # New column for tidal coefficient:
+    tidal_coefficient = db.Column(db.Float, nullable=True)
     
-    # Use UUID for the foreign key so that it matches the User model.
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('environment_data', lazy=True))
     
@@ -61,6 +60,7 @@ class EnvironmentData(db.Model):
             "status": self.status,
             "tide_cycle_hour": self.tide_cycle_hour,
             "tide_cycle_fraction": self.tide_cycle_fraction,
+            "tidal_coefficient": self.tidal_coefficient,
             "sun_state": self.sun_state,
             "temperature": self.temperature,
             "wind_speed": self.wind_speed,

@@ -8,14 +8,12 @@ from celery_app import flask_app, celery
 from tasks import fetch_env_data
 
 app = flask_app
-app.config['SECRET_KEY'] = 'your-secret-key'  # Change this for production!
+app.config['SECRET_KEY'] = 'your-secret-key'  # Change for production!
 
-# Decorator to require a valid JWT token on endpoints.
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        # Expect header "Authorization: Bearer <token>"
         if 'Authorization' in request.headers:
             parts = request.headers['Authorization'].split()
             if len(parts) == 2 and parts[0].lower() == 'bearer':
@@ -74,9 +72,10 @@ def login():
         return jsonify({'message': 'Invalid credentials'}), 401
     
     token = jwt.encode({
-        'user_id': user.id,
-        'exp': datetime.utcnow() + timedelta(hours=24)
+    'user_id': str(user.id),
+    'exp': datetime.utcnow() + timedelta(hours=24)
     }, app.config['SECRET_KEY'], algorithm="HS256")
+
     
     return jsonify({'token': token})
 
@@ -136,6 +135,36 @@ def all_data():
 @app.route('/dashboard')
 def dashboard():
     return render_template("dashboard.html")
+
+@app.route('/delete_user/<user_id>', methods=['DELETE'])
+@token_required
+def delete_user(user_id):
+    current_user = g.current_user
+    if not current_user.is_admin:
+        return jsonify({'message': 'Access forbidden: Admins only.'}), 403
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'message': 'User not found.'}), 404
+    
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': f'User {user_id} deleted successfully.'})
+
+@app.route('/delete_record/<record_id>', methods=['DELETE'])
+@token_required
+def delete_record(record_id):
+    current_user = g.current_user
+    if not current_user.is_admin:
+        return jsonify({'message': 'Access forbidden: Admins only.'}), 403
+    
+    record = EnvironmentData.query.get(record_id)
+    if not record:
+        return jsonify({'message': 'Record not found.'}), 404
+    
+    db.session.delete(record)
+    db.session.commit()
+    return jsonify({'message': f'Record {record_id} deleted successfully.'})
 
 if __name__ == '__main__':
     app.run(debug=False, port=5001)

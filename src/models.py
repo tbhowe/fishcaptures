@@ -1,4 +1,6 @@
+import uuid
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import UUID  # If using PostgreSQL
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -6,12 +8,13 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = 'users'
     
-    id = db.Column(db.Integer, primary_key=True)
+    # Use UUID for primary key.
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
     password_hash = db.Column(db.String(128), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)  # New flag for admin users
-
+    is_admin = db.Column(db.Boolean, default=False)
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
     
@@ -20,7 +23,7 @@ class User(db.Model):
     
     def to_dict(self):
         return {
-            "id": self.id,
+            "id": str(self.id),
             "username": self.username,
             "email": self.email,
             "is_admin": self.is_admin
@@ -29,7 +32,8 @@ class User(db.Model):
 class EnvironmentData(db.Model):
     __tablename__ = 'environment_data'
     
-    id = db.Column(db.Integer, primary_key=True)
+    # Change primary key to a UUID.
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     timestamp = db.Column(db.DateTime, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
@@ -44,13 +48,13 @@ class EnvironmentData(db.Model):
     cloudcover_mid = db.Column(db.Float, nullable=True)
     cloudcover_high = db.Column(db.Float, nullable=True)
     
-    # Associate each record with a user.
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # Use UUID for the foreign key so that it matches the User model.
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('environment_data', lazy=True))
     
     def to_dict(self):
         return {
-            "id": self.id,
+            "id": str(self.id),
             "timestamp": self.timestamp.isoformat(),
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -64,5 +68,5 @@ class EnvironmentData(db.Model):
             "cloudcover_low": self.cloudcover_low,
             "cloudcover_mid": self.cloudcover_mid,
             "cloudcover_high": self.cloudcover_high,
-            "user_id": self.user_id,
+            "user_id": str(self.user_id)
         }

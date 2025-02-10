@@ -7,7 +7,7 @@ import json
 
 @celery.task(name='fetch_env_data')
 def fetch_env_data(record_id):
-    """Fetch environmental data for a given timestamp and coordinates."""
+    """Fetch environmental data for a given timestamp and user-provided coordinates."""
     env_data = EnvironmentData.query.get(record_id)
     if not env_data:
         print(f"Record ID {record_id} not found.")
@@ -16,7 +16,7 @@ def fetch_env_data(record_id):
     try:
         print(f"Processing environment data for record {record_id}")
 
-        # 1. SunTime API Call: use coordinates from env_data
+        # 1. SunTime API Call: use coordinates from env_data.
         try:
             sun_api = SunTimeAPI(lat=env_data.latitude, lng=env_data.longitude)
             sun_state = sun_api.get_time_of_day(env_data.timestamp)
@@ -28,7 +28,7 @@ def fetch_env_data(record_id):
             db.session.commit()
             return
 
-        # 2. Weather API Call: use coordinates from env_data
+        # 2. Weather API Call.
         try:
             weather_api = WeatherAPI(lat=env_data.latitude, lng=env_data.longitude)
             weather_data = weather_api.get_weather_summary(env_data.timestamp, env_data.latitude, env_data.longitude)
@@ -51,12 +51,10 @@ def fetch_env_data(record_id):
             db.session.commit()
             return
 
-        # 3. Tide Cycle API Call: use coordinates from env_data
+        # 3. Tide Cycle API Call.
         try:
-            # Read API key from file.
             with open('api_calls/tide_api_key') as f:
                 api_key = f.read().strip()
-
             tide_station = TideStation(api_key=api_key)
             fraction, hours = tide_station.get_current_tide_cycle(lat=env_data.latitude,
                                                                   lon=env_data.longitude,
@@ -73,6 +71,7 @@ def fetch_env_data(record_id):
         env_data.status = 'complete'
         print(f"Task for record {record_id} completed successfully.")
         db.session.commit()
+
     except Exception as e:
         print(f"General Task Error: {e}")
         db.session.rollback()

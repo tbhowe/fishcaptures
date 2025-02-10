@@ -40,6 +40,18 @@ def submit_timestamp(token):
     response = requests.post(url, json=payload, headers=headers)
     print("Submit Timestamp response:", response.json())
 
+def view_my_data(token):
+    url = f"{BASE_URL}/my_data"
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(url, headers=headers)
+    print("My Data response:", response.json())
+
+def view_all_data(token):
+    url = f"{BASE_URL}/all_data"
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(url, headers=headers)
+    print("All Data response:", response.json())
+
 def main():
     username, email = generate_unique_user()
     register_user(username, email)
@@ -47,9 +59,11 @@ def main():
     token = login_user(username)
     if token:
         submit_timestamp(token)
+        view_my_data(token)
+        # Attempt to view all data. For a non-admin user, this should return an error.
+        view_all_data(token)
     else:
         print("Failed to retrieve token. Aborting.")
 
 if __name__ == "__main__":
     main()
-

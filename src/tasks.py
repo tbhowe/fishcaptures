@@ -4,7 +4,7 @@ from models import db, EnvironmentData
 from api_calls.tide_cycle import TideStation
 from api_calls.weather import WeatherAPI
 from api_calls.suntimes import SunTimeAPI
-from api_calls.tidal_coefficient import TidalCoefficient  # New import
+from api_calls.tidal_coeffiicent import TidalCoefficient  # New import
 import json
 
 @celery.task(name='fetch_env_data')

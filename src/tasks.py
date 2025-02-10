@@ -1,13 +1,15 @@
+# tasks.py
 from celery_app import celery
 from models import db, EnvironmentData
 from api_calls.tide_cycle import TideStation
 from api_calls.weather import WeatherAPI
 from api_calls.suntimes import SunTimeAPI
+from api_calls.tidal_coefficient import TidalCoefficient  # New import
 import json
 
 @celery.task(name='fetch_env_data')
 def fetch_env_data(record_id):
-    """Fetch environmental data for a given timestamp and user-provided coordinates."""
+    """Fetch environmental data for a given timestamp and update tidal coefficient."""
     env_data = EnvironmentData.query.get(record_id)
     if not env_data:
         print(f"Record ID {record_id} not found.")
@@ -16,7 +18,7 @@ def fetch_env_data(record_id):
     try:
         print(f"Processing environment data for record {record_id}")
 
-        # 1. SunTime API Call: use coordinates from env_data.
+        # 1. SunTime API Call:
         try:
             sun_api = SunTimeAPI(lat=env_data.latitude, lng=env_data.longitude)
             sun_state = sun_api.get_time_of_day(env_data.timestamp)
@@ -28,7 +30,7 @@ def fetch_env_data(record_id):
             db.session.commit()
             return
 
-        # 2. Weather API Call.
+        # 2. Weather API Call:
         try:
             weather_api = WeatherAPI(lat=env_data.latitude, lng=env_data.longitude)
             weather_data = weather_api.get_weather_summary(env_data.timestamp, env_data.latitude, env_data.longitude)
@@ -51,7 +53,7 @@ def fetch_env_data(record_id):
             db.session.commit()
             return
 
-        # 3. Tide Cycle API Call.
+        # 3. Tide Cycle API Call:
         try:
             with open('api_calls/tide_api_key') as f:
                 api_key = f.read().strip()
@@ -68,6 +70,19 @@ def fetch_env_data(record_id):
             db.session.commit()
             return
 
+        # 4. New: Tidal Coefficient:
+        try:
+            tc = TidalCoefficient()
+            coefficient = tc.get_tidal_coefficient(env_data.latitude, env_data.longitude, env_data.timestamp)
+            env_data.tidal_coefficient = coefficient
+            print(f"Tidal Coefficient computed: {coefficient}")
+        except Exception as e:
+            print(f"Tidal Coefficient Error: {e}")
+            env_data.status = 'error'
+            db.session.commit()
+            return
+
+        # Mark task as complete.
         env_data.status = 'complete'
         print(f"Task for record {record_id} completed successfully.")
         db.session.commit()

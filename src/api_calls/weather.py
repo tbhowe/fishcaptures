@@ -67,11 +67,11 @@ class WeatherAPI:
 
         return summary
 
-# Test
-dodman_latlong = [50.220564, -4.801677]
-api = WeatherAPI(dodman_latlong[0], dodman_latlong[1])
-test_timestamp = datetime.datetime.now()
-weather_summary = api.get_weather_summary(test_timestamp, dodman_latlong[0], dodman_latlong[1])
-print(weather_summary)
+# # Test
+# dodman_latlong = [50.220564, -4.801677]
+# api = WeatherAPI(dodman_latlong[0], dodman_latlong[1])
+# test_timestamp = datetime.datetime.now()
+# weather_summary = api.get_weather_summary(test_timestamp, dodman_latlong[0], dodman_latlong[1])
+# print(weather_summary)
 
 # %%

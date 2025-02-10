@@ -34,6 +34,7 @@
                     <th>Status</th>
                     <th>Tide Cycle Hour</th>
                     <th>Tide Cycle Fraction</th>
+                    <th>Tidal Coefficient</th>
                     <th>Sun State</th>
                     <th>Temperature</th>
                     <th>Wind Speed</th>
@@ -41,7 +42,7 @@
                     <th>Cloudcover Low</th>
                     <th>Cloudcover Mid</th>
                     <th>Cloudcover High</th>
-                </tr>
+                  </tr>
             </thead>
             <tbody>
             </tbody>
@@ -100,6 +101,7 @@
                         <td>${record.status}</td>
                         <td>${record.tide_cycle_hour !== null ? record.tide_cycle_hour : ''}</td>
                         <td>${record.tide_cycle_fraction !== null ? record.tide_cycle_fraction : ''}</td>
+                        <td>${record.tidal_coefficient !== null ? record.tidal_coefficient : ''}</td>
                         <td>${record.sun_state || ''}</td>
                         <td>${record.temperature !== null ? record.temperature : ''}</td>
                         <td>${record.wind_speed !== null ? record.wind_speed : ''}</td>

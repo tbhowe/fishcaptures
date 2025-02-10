@@ -32,6 +32,15 @@
                     <th>Latitude</th>
                     <th>Longitude</th>
                     <th>Status</th>
+                    <th>Tide Cycle Hour</th>
+                    <th>Tide Cycle Fraction</th>
+                    <th>Sun State</th>
+                    <th>Temperature</th>
+                    <th>Wind Speed</th>
+                    <th>Wind Direction</th>
+                    <th>Cloudcover Low</th>
+                    <th>Cloudcover Mid</th>
+                    <th>Cloudcover High</th>
                 </tr>
             </thead>
             <tbody>
@@ -42,9 +51,7 @@
     </div>
     
     <script>
-        // If your backend is on the same host and port, BASE_URL can be empty.
         const BASE_URL = "";
-
         const loginDiv = document.getElementById("login");
         const dashboardDiv = document.getElementById("dashboard");
         const loginBtn = document.getElementById("loginBtn");
@@ -91,6 +98,15 @@
                         <td>${record.latitude}</td>
                         <td>${record.longitude}</td>
                         <td>${record.status}</td>
+                        <td>${record.tide_cycle_hour !== null ? record.tide_cycle_hour : ''}</td>
+                        <td>${record.tide_cycle_fraction !== null ? record.tide_cycle_fraction : ''}</td>
+                        <td>${record.sun_state || ''}</td>
+                        <td>${record.temperature !== null ? record.temperature : ''}</td>
+                        <td>${record.wind_speed !== null ? record.wind_speed : ''}</td>
+                        <td>${record.wind_direction !== null ? record.wind_direction : ''}</td>
+                        <td>${record.cloudcover_low !== null ? record.cloudcover_low : ''}</td>
+                        <td>${record.cloudcover_mid !== null ? record.cloudcover_mid : ''}</td>
+                        <td>${record.cloudcover_high !== null ? record.cloudcover_high : ''}</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -105,7 +121,6 @@
             dashboardDiv.style.display = "none";
         });
 
-        // On page load, if a token exists, show dashboard.
         window.addEventListener("load", () => {
             const token = localStorage.getItem("token");
             if (token) {

@@ -1,6 +1,6 @@
 import uuid
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import UUID  # If using PostgreSQL
+from sqlalchemy.dialects.postgresql import UUID  # Use this if you're on PostgreSQL
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -8,7 +8,7 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = 'users'
     
-    # Use UUID for primary key.
+    # Use a UUID for primary key.
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
@@ -32,23 +32,52 @@ class User(db.Model):
 class EnvironmentData(db.Model):
     __tablename__ = 'environment_data'
     
-    # Change primary key to a UUID.
+    # Primary key as UUID.
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     timestamp = db.Column(db.DateTime, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default='pending')
-    tide_cycle_hour = db.Column(db.Float, nullable=True)
-    tide_cycle_fraction = db.Column(db.Float, nullable=True)
-    sun_state = db.Column(db.String(50), nullable=True)
-    temperature = db.Column(db.Float, nullable=True)
-    wind_speed = db.Column(db.Float, nullable=True)
-    wind_direction = db.Column(db.Float, nullable=True)
-    cloudcover_low = db.Column(db.Float, nullable=True)
-    cloudcover_mid = db.Column(db.Float, nullable=True)
-    cloudcover_high = db.Column(db.Float, nullable=True)
     
-    # Use UUID for the foreign key so that it matches the User model.
+    # Tide API fields:
+    currentTideHeight = db.Column(db.Float, nullable=True)
+    tideHour = db.Column(db.Float, nullable=True)
+    maxHighTide = db.Column(db.Float, nullable=True)
+    minLowTide = db.Column(db.Float, nullable=True)
+    
+    # Weather API fields:
+    airTemperature = db.Column(db.Float, nullable=True)
+    pressure = db.Column(db.Float, nullable=True)
+    cloudCover = db.Column(db.Float, nullable=True)
+    currentDirection = db.Column(db.Float, nullable=True)
+    currentSpeed = db.Column(db.Float, nullable=True)
+    swellDirection = db.Column(db.Float, nullable=True)
+    swellHeight = db.Column(db.Float, nullable=True)
+    swellPeriod = db.Column(db.Float, nullable=True)
+    secondarySwellPeriod = db.Column(db.Float, nullable=True)
+    secondarySwellDirection = db.Column(db.Float, nullable=True)
+    secondarySwellHeight = db.Column(db.Float, nullable=True)
+    waveDirection = db.Column(db.Float, nullable=True)
+    waveHeight = db.Column(db.Float, nullable=True)
+    wavePeriod = db.Column(db.Float, nullable=True)
+    windWaveDirection = db.Column(db.Float, nullable=True)
+    windWaveHeight = db.Column(db.Float, nullable=True)
+    windWavePeriod = db.Column(db.Float, nullable=True)
+    windDirection = db.Column(db.Float, nullable=True)
+    windSpeed = db.Column(db.Float, nullable=True)
+    gust = db.Column(db.Float, nullable=True)
+    
+    # Astronomy API fields:
+    sunrise = db.Column(db.String, nullable=True)
+    sunset = db.Column(db.String, nullable=True)
+    moonrise = db.Column(db.String, nullable=True)
+    moonset = db.Column(db.String, nullable=True)
+    moonFraction = db.Column(db.Float, nullable=True)
+    currentMoonPhaseText = db.Column(db.String, nullable=True)
+    currentMoonPhaseValue = db.Column(db.Float, nullable=True)
+    lightLevel = db.Column(db.String, nullable=True)
+    
+    # Foreign key to User.
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('environment_data', lazy=True))
     
@@ -59,14 +88,40 @@ class EnvironmentData(db.Model):
             "latitude": self.latitude,
             "longitude": self.longitude,
             "status": self.status,
-            "tide_cycle_hour": self.tide_cycle_hour,
-            "tide_cycle_fraction": self.tide_cycle_fraction,
-            "sun_state": self.sun_state,
-            "temperature": self.temperature,
-            "wind_speed": self.wind_speed,
-            "wind_direction": self.wind_direction,
-            "cloudcover_low": self.cloudcover_low,
-            "cloudcover_mid": self.cloudcover_mid,
-            "cloudcover_high": self.cloudcover_high,
+            # Tide API fields:
+            "currentTideHeight": self.currentTideHeight,
+            "tideHour": self.tideHour,
+            "maxHighTide": self.maxHighTide,
+            "minLowTide": self.minLowTide,
+            # Weather API fields:
+            "airTemperature": self.airTemperature,
+            "pressure": self.pressure,
+            "cloudCover": self.cloudCover,
+            "currentDirection": self.currentDirection,
+            "currentSpeed": self.currentSpeed,
+            "swellDirection": self.swellDirection,
+            "swellHeight": self.swellHeight,
+            "swellPeriod": self.swellPeriod,
+            "secondarySwellPeriod": self.secondarySwellPeriod,
+            "secondarySwellDirection": self.secondarySwellDirection,
+            "secondarySwellHeight": self.secondarySwellHeight,
+            "waveDirection": self.waveDirection,
+            "waveHeight": self.waveHeight,
+            "wavePeriod": self.wavePeriod,
+            "windWaveDirection": self.windWaveDirection,
+            "windWaveHeight": self.windWaveHeight,
+            "windWavePeriod": self.windWavePeriod,
+            "windDirection": self.windDirection,
+            "windSpeed": self.windSpeed,
+            "gust": self.gust,
+            # Astronomy API fields:
+            "sunrise": self.sunrise,
+            "sunset": self.sunset,
+            "moonrise": self.moonrise,
+            "moonset": self.moonset,
+            "moonFraction": self.moonFraction,
+            "currentMoonPhaseText": self.currentMoonPhaseText,
+            "currentMoonPhaseValue": self.currentMoonPhaseValue,
+            "lightLevel": self.lightLevel,
             "user_id": str(self.user_id)
         }

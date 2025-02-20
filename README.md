@@ -1,6 +1,7 @@
 # fishcaptures
 ## Auto-logging of environmental data for timestamped fish captures
 
+[![Watch the video](https://your-image-url.com/thumbnail.png)](https://www.loom.com/share/df9fbbcdb13c45dcafaed6f999570630?sid=febfb011-df97-417d-985e-823fa02d7236)
 
 
 Fishcaptures is a tool for auto-logging environmental data tied to timestamped fish captures. It records the time and location of a catch and then retrieves environmental data from tide, weather, and astronomy APIs. This helps anglers track the conditions around where their fish were caught.

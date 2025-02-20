@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, g, render_template
+from flask import Flask, request, jsonify, g, render_template, redirect, url_for
 from datetime import datetime, timedelta
 import jwt
 import traceback
@@ -72,10 +72,9 @@ def login():
         return jsonify({'message': 'Invalid credentials'}), 401
     
     token = jwt.encode({
-    'user_id': str(user.id),
-    'exp': datetime.utcnow() + timedelta(hours=24)
+        'user_id': str(user.id),
+        'exp': datetime.utcnow() + timedelta(hours=24)
     }, app.config['SECRET_KEY'], algorithm="HS256")
-
     
     return jsonify({'token': token})
 
@@ -165,6 +164,23 @@ def delete_record(record_id):
     db.session.delete(record)
     db.session.commit()
     return jsonify({'message': f'Record {record_id} deleted successfully.'})
+
+# --- Additional Routes for Rendering Frontend Templates ---
+
+# Landing page with login and register options.
+@app.route('/')
+def index():
+    return render_template("index.html")
+
+# Render the login page.
+@app.route('/login_page')
+def login_page():
+    return render_template("login.html")
+
+# Render the registration page.
+@app.route('/register_page')
+def register_page():
+    return render_template("register.html")
 
 if __name__ == '__main__':
     app.run(debug=False, port=5001)

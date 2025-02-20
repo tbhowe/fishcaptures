@@ -11,13 +11,28 @@
     @media (max-width: 600px) {
        table, th, td { font-size: 12px; }
     }
-    /* Large submit catch button style */
     #submitCatchBtn {
       font-size: 24px;
       padding: 15px 30px;
       margin-bottom: 20px;
     }
+    #w3wMap { height: 400px; width: 100%; margin: 10px 0; }
+    #search-container {
+      margin: 10px 0 0 10px;
+    }
+    #search-input {
+      width: 300px;
+    }
   </style>
+  <!-- Load Leaflet CSS (if you're using Leaflet) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+    crossorigin=""
+  />
+  <!-- Load what3words JavaScript components -->
+  <script type="module" defer src="https://cdn.what3words.com/javascript-components@4.8.0/dist/what3words/what3words.esm.js"></script>
+  <script nomodule defer src="https://cdn.what3words.com/javascript-components@4.8.0/dist/what3words/what3words.js"></script>
 </head>
 <body>
   <h1>User Dashboard</h1>
@@ -27,22 +42,46 @@
     <label>Password: <input type="password" id="password"></label><br>
     <button id="loginBtn">Login</button>
   </div>
+  
   <div id="dashboard" style="display:none;">
-    <!-- Catch submission section -->
     <div id="catchSection">
       <button id="submitCatchBtn">Submit Catch</button>
       <br><br>
-      <label for="w3wInput">what3words Address:</label>
-      <input type="text" id="w3wInput" placeholder="e.g. filled.count.soap">
-      <br>
+      
+      <!-- what3words Map Component -->
+      <what3words-map
+        id="w3w-map"
+        api_key="VHHA6USP"
+        provider="leaflet"
+        zoom="18"
+        show-grid="true"
+        language="en"
+        clip-to-bounding-box="false"
+        enable-search="true"
+        center="51.520847,-0.195521"
+      >
+        <div slot="map" id="w3wMap"></div>
+        <div slot="search-control" id="search-container">
+          <what3words-autosuggest api_key="VHHA6USP">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Find your address"
+              autocomplete="off"
+            />
+          </what3words-autosuggest>
+        </div>
+      </what3words-map>
+      
       <label>Latitude:</label>
-      <input type="text" id="latBox" readonly>
+      <input type="text" id="latBox">
       <label>Longitude:</label>
-      <input type="text" id="lngBox" readonly>
+      <input type="text" id="lngBox">
+      <label>what3words Address:</label>
+      <input type="text" id="w3wAddress">
     </div>
     
     <br>
-    <!-- User captures table -->
     <div id="dataSection">
       <h2>Your Captures</h2>
       <button id="loadDataBtn">Load My Data</button>
@@ -54,28 +93,32 @@
             <th>Latitude</th>
             <th>Longitude</th>
             <th>Status</th>
-            <th>Tide Cycle Hour</th>
-            <th>Tide Cycle Fraction</th>
-            <th>Sun State</th>
-            <th>Temperature</th>
+            <th>Current Tide Height</th>
+            <th>Tide Hour</th>
+            <th>Max High Tide</th>
+            <th>Min Low Tide</th>
+            <th>Air Temperature</th>
+            <th>Pressure</th>
+            <th>Cloud Cover</th>
             <th>Wind Speed</th>
             <th>Wind Direction</th>
-            <th>Cloudcover Low</th>
-            <th>Cloudcover Mid</th>
-            <th>Cloudcover High</th>
+            <th>Wave Height</th>
+            <th>Wave Period</th>
+            <th>Swell Height</th>
+            <th>Swell Period</th>
+            <th>Sunrise</th>
+            <th>Sunset</th>
+            <th>Moon Phase</th>
+            <th>Light Level</th>
           </tr>
         </thead>
-        <tbody>
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
     
     <br>
     <button id="logoutBtn">Logout</button>
   </div>
-  
-  <!-- Optionally include what3words SDK if desired -->
-  <!-- <script src="https://assets.what3words.com/sdk/v3/what3words.js"></script> -->
   
   <script>
     const BASE_URL = "";
@@ -85,13 +128,56 @@
     const loadDataBtn = document.getElementById("loadDataBtn");
     const logoutBtn = document.getElementById("logoutBtn");
 
+    document.addEventListener("DOMContentLoaded", () => {
+      const w3wMapElement = document.getElementById("w3w-map");
+      
+      // 1) Capture clicking on a what3words square
+      w3wMapElement.addEventListener("selected_square", (e) => {
+        console.log("selected_square event:", e.detail);
+        if (e.detail && e.detail.coordinates) {
+          document.getElementById("latBox").value = e.detail.coordinates.lat;
+          document.getElementById("lngBox").value = e.detail.coordinates.lng;
+          document.getElementById("w3wAddress").value = e.detail.words || "";
+        }
+      });
+
+      // 2) Also capture any new valid 3 word address from searching
+      //    or from setWords(), etc.
+      w3wMapElement.addEventListener("coordinates_changed", (e) => {
+        console.log("coordinates_changed event:", e.detail);
+        if (e.detail && e.detail.coordinates) {
+          document.getElementById("latBox").value = e.detail.coordinates.lat;
+          document.getElementById("lngBox").value = e.detail.coordinates.lng;
+          document.getElementById("w3wAddress").value = e.detail.words || "";
+        }
+      });
+
+      w3wMapElement.addEventListener("mapInitialized", () => {
+        console.log("what3words map initialized");
+      });
+
+      w3wMapElement.addEventListener("error", (e) => {
+        console.error("what3words map error:", e.detail);
+      });
+
+      // 3) If user types a w3w in #w3wAddress and presses Enter, do setWords
+      const w3wAddressInput = document.getElementById("w3wAddress");
+      w3wAddressInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          w3wMapElement.setWords(e.target.value);
+        }
+      });
+    });
+
+    // ---- LOGIN LOGIC ----
     loginBtn.addEventListener("click", async () => {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
       const response = await fetch(BASE_URL + "/login", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username, password})
+        body: JSON.stringify({ username, password })
       });
       const data = await response.json();
       if (data.token) {
@@ -125,15 +211,23 @@
             <td>${record.latitude}</td>
             <td>${record.longitude}</td>
             <td>${record.status}</td>
-            <td>${record.tide_cycle_hour !== null ? record.tide_cycle_hour : ''}</td>
-            <td>${record.tide_cycle_fraction !== null ? record.tide_cycle_fraction : ''}</td>
-            <td>${record.sun_state || ''}</td>
-            <td>${record.temperature !== null ? record.temperature : ''}</td>
-            <td>${record.wind_speed !== null ? record.wind_speed : ''}</td>
-            <td>${record.wind_direction !== null ? record.wind_direction : ''}</td>
-            <td>${record.cloudcover_low !== null ? record.cloudcover_low : ''}</td>
-            <td>${record.cloudcover_mid !== null ? record.cloudcover_mid : ''}</td>
-            <td>${record.cloudcover_high !== null ? record.cloudcover_high : ''}</td>
+            <td>${record.currentTideHeight !== null ? record.currentTideHeight : ''}</td>
+            <td>${record.tideHour !== null ? record.tideHour : ''}</td>
+            <td>${record.maxHighTide !== null ? record.maxHighTide : ''}</td>
+            <td>${record.minLowTide !== null ? record.minLowTide : ''}</td>
+            <td>${record.airTemperature !== null ? record.airTemperature : ''}</td>
+            <td>${record.pressure !== null ? record.pressure : ''}</td>
+            <td>${record.cloudCover !== null ? record.cloudCover : ''}</td>
+            <td>${record.windSpeed !== null ? record.windSpeed : ''}</td>
+            <td>${record.windDirection !== null ? record.windDirection : ''}</td>
+            <td>${record.waveHeight !== null ? record.waveHeight : ''}</td>
+            <td>${record.wavePeriod !== null ? record.wavePeriod : ''}</td>
+            <td>${record.swellHeight !== null ? record.swellHeight : ''}</td>
+            <td>${record.swellPeriod !== null ? record.swellPeriod : ''}</td>
+            <td>${record.sunrise || ''}</td>
+            <td>${record.sunset || ''}</td>
+            <td>${record.currentMoonPhaseText || ''}</td>
+            <td>${record.lightLevel || ''}</td>
           `;
           tbody.appendChild(row);
         });
@@ -148,6 +242,7 @@
       dashboardDiv.style.display = "none";
     });
 
+    // Auto-login check
     window.addEventListener("load", () => {
       const token = localStorage.getItem("token");
       if (token) {
@@ -156,29 +251,7 @@
       }
     });
 
-    // what3words conversion on change
-    document.getElementById("w3wInput").addEventListener("change", function() {
-      const address = this.value.trim();
-      if (address) {
-        // Replace YOUR_W3W_API_KEY with your actual key.
-        fetch(`https://api.what3words.com/v3/convert-to-coordinates?words=${encodeURIComponent(address)}&key=VHHA6USP`)
-          .then(response => response.json())
-          .then(data => {
-            if (data.coordinates) {
-              document.getElementById("latBox").value = data.coordinates.lat;
-              document.getElementById("lngBox").value = data.coordinates.lng;
-            } else {
-              alert("Invalid what3words address");
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            alert("Error converting address");
-          });
-      }
-    });
-
-    // Submit Catch button handler
+    // SUBMIT CATCH
     document.getElementById("submitCatchBtn").addEventListener("click", async function(){
       const token = localStorage.getItem("token");
       if (!token) {
@@ -188,7 +261,7 @@
       const lat = document.getElementById("latBox").value;
       const lng = document.getElementById("lngBox").value;
       if (!lat || !lng) {
-        alert("Please enter a valid what3words address and wait for conversion.");
+        alert("Please select a location on the map or enter a valid what3words address.");
         return;
       }
       const timestamp = new Date().toISOString();

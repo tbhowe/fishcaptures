@@ -1,133 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>User Dashboard</title>
-    <style>
-      body { font-family: Arial, sans-serif; }
-      input, button { margin: 5px; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-      @media (max-width: 600px) {
-         table, th, td { font-size: 12px; }
-      }
-    </style>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    input, button { margin: 5px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    @media (max-width: 600px) {
+       table, th, td { font-size: 12px; }
+    }
+    /* Large submit catch button style */
+    #submitCatchBtn {
+      font-size: 24px;
+      padding: 15px 30px;
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
-    <h1>User Dashboard</h1>
-    <div id="login">
-        <h2>Login</h2>
-        <label>Username: <input type="text" id="username"></label><br>
-        <label>Password: <input type="password" id="password"></label><br>
-        <button id="loginBtn">Login</button>
-    </div>
-    <div id="dashboard" style="display:none;">
-        <h2>Your Data</h2>
-        <button id="loadDataBtn">Load My Data</button>
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Timestamp</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
-                    <th>Status</th>
-                    <th>Tide Cycle Hour</th>
-                    <th>Tide Cycle Fraction</th>
-                    <th>Sun State</th>
-                    <th>Temperature</th>
-                    <th>Wind Speed</th>
-                    <th>Wind Direction</th>
-                    <th>Cloudcover Low</th>
-                    <th>Cloudcover Mid</th>
-                    <th>Cloudcover High</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-        <br>
-        <button id="logoutBtn">Logout</button>
+  <h1>User Dashboard</h1>
+  <div id="login">
+    <h2>Login</h2>
+    <label>Username: <input type="text" id="username"></label><br>
+    <label>Password: <input type="password" id="password"></label><br>
+    <button id="loginBtn">Login</button>
+  </div>
+  <div id="dashboard" style="display:none;">
+    <!-- Catch submission section -->
+    <div id="catchSection">
+      <button id="submitCatchBtn">Submit Catch</button>
+      <br><br>
+      <label for="w3wInput">what3words Address:</label>
+      <input type="text" id="w3wInput" placeholder="e.g. filled.count.soap">
+      <br>
+      <label>Latitude:</label>
+      <input type="text" id="latBox" readonly>
+      <label>Longitude:</label>
+      <input type="text" id="lngBox" readonly>
     </div>
     
-    <script>
-        const BASE_URL = "";
-        const loginDiv = document.getElementById("login");
-        const dashboardDiv = document.getElementById("dashboard");
-        const loginBtn = document.getElementById("loginBtn");
-        const loadDataBtn = document.getElementById("loadDataBtn");
-        const logoutBtn = document.getElementById("logoutBtn");
+    <br>
+    <!-- User captures table -->
+    <div id="dataSection">
+      <h2>Your Captures</h2>
+      <button id="loadDataBtn">Load My Data</button>
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Timestamp</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Status</th>
+            <th>Tide Cycle Hour</th>
+            <th>Tide Cycle Fraction</th>
+            <th>Sun State</th>
+            <th>Temperature</th>
+            <th>Wind Speed</th>
+            <th>Wind Direction</th>
+            <th>Cloudcover Low</th>
+            <th>Cloudcover Mid</th>
+            <th>Cloudcover High</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    
+    <br>
+    <button id="logoutBtn">Logout</button>
+  </div>
+  
+  <!-- Optionally include what3words SDK if desired -->
+  <!-- <script src="https://assets.what3words.com/sdk/v3/what3words.js"></script> -->
+  
+  <script>
+    const BASE_URL = "";
+    const loginDiv = document.getElementById("login");
+    const dashboardDiv = document.getElementById("dashboard");
+    const loginBtn = document.getElementById("loginBtn");
+    const loadDataBtn = document.getElementById("loadDataBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-        loginBtn.addEventListener("click", async () => {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-            const response = await fetch(BASE_URL + "/login", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({username, password})
-            });
-            const data = await response.json();
-            if (data.token) {
-                localStorage.setItem("token", data.token);
-                loginDiv.style.display = "none";
-                dashboardDiv.style.display = "block";
+    loginBtn.addEventListener("click", async () => {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const response = await fetch(BASE_URL + "/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username, password})
+      });
+      const data = await response.json();
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        loginDiv.style.display = "none";
+        dashboardDiv.style.display = "block";
+      } else {
+        alert("Login failed: " + data.message);
+      }
+    });
+
+    loadDataBtn.addEventListener("click", async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Not logged in!");
+        return;
+      }
+      const response = await fetch(BASE_URL + "/my_data", {
+        method: "GET",
+        headers: {"Authorization": "Bearer " + token}
+      });
+      const data = await response.json();
+      const tbody = document.querySelector("#dataTable tbody");
+      tbody.innerHTML = "";
+      if (Array.isArray(data)) {
+        data.forEach(record => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${record.id}</td>
+            <td>${record.timestamp}</td>
+            <td>${record.latitude}</td>
+            <td>${record.longitude}</td>
+            <td>${record.status}</td>
+            <td>${record.tide_cycle_hour !== null ? record.tide_cycle_hour : ''}</td>
+            <td>${record.tide_cycle_fraction !== null ? record.tide_cycle_fraction : ''}</td>
+            <td>${record.sun_state || ''}</td>
+            <td>${record.temperature !== null ? record.temperature : ''}</td>
+            <td>${record.wind_speed !== null ? record.wind_speed : ''}</td>
+            <td>${record.wind_direction !== null ? record.wind_direction : ''}</td>
+            <td>${record.cloudcover_low !== null ? record.cloudcover_low : ''}</td>
+            <td>${record.cloudcover_mid !== null ? record.cloudcover_mid : ''}</td>
+            <td>${record.cloudcover_high !== null ? record.cloudcover_high : ''}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } else {
+        alert("Error loading data: " + JSON.stringify(data));
+      }
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("token");
+      loginDiv.style.display = "block";
+      dashboardDiv.style.display = "none";
+    });
+
+    window.addEventListener("load", () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        loginDiv.style.display = "none";
+        dashboardDiv.style.display = "block";
+      }
+    });
+
+    // what3words conversion on change
+    document.getElementById("w3wInput").addEventListener("change", function() {
+      const address = this.value.trim();
+      if (address) {
+        // Replace YOUR_W3W_API_KEY with your actual key.
+        fetch(`https://api.what3words.com/v3/convert-to-coordinates?words=${encodeURIComponent(address)}&key=VHHA6USP`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.coordinates) {
+              document.getElementById("latBox").value = data.coordinates.lat;
+              document.getElementById("lngBox").value = data.coordinates.lng;
             } else {
-                alert("Login failed: " + data.message);
+              alert("Invalid what3words address");
             }
-        });
+          })
+          .catch(err => {
+            console.error(err);
+            alert("Error converting address");
+          });
+      }
+    });
 
-        loadDataBtn.addEventListener("click", async () => {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                alert("Not logged in!");
-                return;
-            }
-            const response = await fetch(BASE_URL + "/my_data", {
-                method: "GET",
-                headers: {"Authorization": "Bearer " + token}
-            });
-            const data = await response.json();
-            const tbody = document.querySelector("#dataTable tbody");
-            tbody.innerHTML = "";
-            if (Array.isArray(data)) {
-                data.forEach(record => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${record.id}</td>
-                        <td>${record.timestamp}</td>
-                        <td>${record.latitude}</td>
-                        <td>${record.longitude}</td>
-                        <td>${record.status}</td>
-                        <td>${record.tide_cycle_hour !== null ? record.tide_cycle_hour : ''}</td>
-                        <td>${record.tide_cycle_fraction !== null ? record.tide_cycle_fraction : ''}</td>
-                        <td>${record.sun_state || ''}</td>
-                        <td>${record.temperature !== null ? record.temperature : ''}</td>
-                        <td>${record.wind_speed !== null ? record.wind_speed : ''}</td>
-                        <td>${record.wind_direction !== null ? record.wind_direction : ''}</td>
-                        <td>${record.cloudcover_low !== null ? record.cloudcover_low : ''}</td>
-                        <td>${record.cloudcover_mid !== null ? record.cloudcover_mid : ''}</td>
-                        <td>${record.cloudcover_high !== null ? record.cloudcover_high : ''}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } else {
-                alert("Error loading data: " + JSON.stringify(data));
-            }
-        });
-
-        logoutBtn.addEventListener("click", () => {
-            localStorage.removeItem("token");
-            loginDiv.style.display = "block";
-            dashboardDiv.style.display = "none";
-        });
-
-        window.addEventListener("load", () => {
-            const token = localStorage.getItem("token");
-            if (token) {
-                loginDiv.style.display = "none";
-                dashboardDiv.style.display = "block";
-            }
-        });
-    </script>
+    // Submit Catch button handler
+    document.getElementById("submitCatchBtn").addEventListener("click", async function(){
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Not logged in!");
+        return;
+      }
+      const lat = document.getElementById("latBox").value;
+      const lng = document.getElementById("lngBox").value;
+      if (!lat || !lng) {
+        alert("Please enter a valid what3words address and wait for conversion.");
+        return;
+      }
+      const timestamp = new Date().toISOString();
+      const response = await fetch(BASE_URL + "/submit_timestamp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ timestamp: timestamp, lat: lat, lng: lng })
+      });
+      const data = await response.json();
+      if (response.status === 202) {
+        alert("Catch submitted successfully!");
+      } else {
+        alert("Error: " + JSON.stringify(data));
+      }
+    });
+  </script>
 </body>
 </html>

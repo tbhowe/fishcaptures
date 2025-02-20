@@ -1,3 +1,4 @@
+#%%
 import os
 import arrow
 import requests
@@ -217,3 +218,5 @@ if __name__ == "__main__":
     client = TideAPIClient()
     tide_data = client.get_tide_data(test_date, lat, lon)
     print("Tide data:", tide_data)
+
+# %%

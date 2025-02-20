@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    form { max-width: 300px; margin: 50px auto; }
+    input { display: block; width: 100%; margin-bottom: 15px; padding: 8px; }
+    button { padding: 10px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h2 style="text-align: center;">Login</h2>
+  <!-- Prevent default form submission -->
+  <form id="loginForm" action="javascript:void(0);" onsubmit="return false;">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <!-- Change type to button so it won't submit the form -->
+    <button type="button" id="loginBtn">Login</button>
+  </form>
+  <p style="text-align: center;">Don't have an account? <a href="{{ url_for('register_page') }}">Register here</a></p>
+  <script>
+    document.getElementById("loginBtn").addEventListener("click", async function() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const response = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        window.location.href = "/dashboard";
+      } else {
+        alert("Login failed: " + data.message);
+      }
+    });
+  </script>
+</body>
+</html>

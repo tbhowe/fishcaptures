@@ -147,3 +147,5 @@ if __name__ == "__main__":
     client = WeatherAPIClient()  # Reads API key from environment.
     weather = client.get_weather_data(test_date, lat, lon)
     print("Weather data:", weather)
+
+# %%

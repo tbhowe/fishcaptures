@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; }
+    button { font-size: 18px; padding: 10px 20px; margin: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Fish Captures</h1>
+  <p>Please choose an option:</p>
+  <button id="loginBtn">Login</button>
+  <button id="registerBtn">Register</button>
+  <script>
+    document.getElementById("loginBtn").addEventListener("click", function() {
+      window.location.href = "{{ url_for('login_page') }}";
+    });
+    document.getElementById("registerBtn").addEventListener("click", function() {
+      window.location.href = "{{ url_for('register_page') }}";
+    });
+  </script>
+</body>
+</html>

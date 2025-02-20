@@ -24,12 +24,12 @@
       width: 300px;
     }
   </style>
-  <!-- Load Leaflet CSS (if you're using Leaflet) -->
-  <link
+  <!-- If using Google Maps as provider, you may remove the Leaflet CSS -->
+  <!-- <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
     crossorigin=""
-  />
+  /> -->
   <!-- Load what3words JavaScript components -->
   <script type="module" defer src="https://cdn.what3words.com/javascript-components@4.8.0/dist/what3words/what3words.esm.js"></script>
   <script nomodule defer src="https://cdn.what3words.com/javascript-components@4.8.0/dist/what3words/what3words.js"></script>
@@ -48,17 +48,20 @@
       <button id="submitCatchBtn">Submit Catch</button>
       <br><br>
       
-      <!-- what3words Map Component -->
+      <!-- what3words Map Component using Google Maps -->
       <what3words-map
         id="w3w-map"
         api_key="VHHA6USP"
-        provider="leaflet"
+        map_api_key="AIzaSyDXK4qHuHGdipHxXk8xxSDCDB_RWM2UlP4"
+        provider="google"
         zoom="18"
         show-grid="true"
         language="en"
         clip-to-bounding-box="false"
         enable-search="true"
-        center="51.520847,-0.195521"
+        center="50.268772,-4.782199"
+        lat="50.268772"
+        lng="-4.782199"
       >
         <div slot="map" id="w3wMap"></div>
         <div slot="search-control" id="search-container">
@@ -131,7 +134,7 @@
     document.addEventListener("DOMContentLoaded", () => {
       const w3wMapElement = document.getElementById("w3w-map");
       
-      // 1) Capture clicking on a what3words square
+      // Listen for what3words square selection
       w3wMapElement.addEventListener("selected_square", (e) => {
         console.log("selected_square event:", e.detail);
         if (e.detail && e.detail.coordinates) {
@@ -141,8 +144,7 @@
         }
       });
 
-      // 2) Also capture any new valid 3 word address from searching
-      //    or from setWords(), etc.
+      // Listen for coordinate changes (e.g., when a valid address is entered)
       w3wMapElement.addEventListener("coordinates_changed", (e) => {
         console.log("coordinates_changed event:", e.detail);
         if (e.detail && e.detail.coordinates) {
@@ -160,7 +162,7 @@
         console.error("what3words map error:", e.detail);
       });
 
-      // 3) If user types a w3w in #w3wAddress and presses Enter, do setWords
+      // When user types a what3words address and presses Enter, update the map
       const w3wAddressInput = document.getElementById("w3wAddress");
       w3wAddressInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
@@ -170,7 +172,7 @@
       });
     });
 
-    // ---- LOGIN LOGIC ----
+    // Login logic
     loginBtn.addEventListener("click", async () => {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
@@ -242,7 +244,6 @@
       dashboardDiv.style.display = "none";
     });
 
-    // Auto-login check
     window.addEventListener("load", () => {
       const token = localStorage.getItem("token");
       if (token) {
@@ -251,7 +252,6 @@
       }
     });
 
-    // SUBMIT CATCH
     document.getElementById("submitCatchBtn").addEventListener("click", async function(){
       const token = localStorage.getItem("token");
       if (!token) {
